@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from "express";
-import app from "../app";
+import { NextFunction, Request, Response, Router } from "express";
 import { groupMap, userMap } from "../store";
 import { v4 as uuid } from "uuid";
 
-app.post("/addGroup", (req: Request, res: Response, next: NextFunction) => {
+const addGroupRouter = Router()
+addGroupRouter.post("/", (req: Request, res: Response, next: NextFunction) => {
     try {
       const { groupName, uniqueId, isDm, uniqueId2 } = req.body as {
         groupName: string;
@@ -66,3 +66,4 @@ app.post("/addGroup", (req: Request, res: Response, next: NextFunction) => {
     }
   });
   
+  export default addGroupRouter;

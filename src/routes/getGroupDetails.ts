@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from "express";
-import app from "../app";
+import { NextFunction, Request, Response, Router } from "express";
 import { IGroupMap, groupMap, userMap } from "../store";
 
-app.get(
-  "/getGroupDetails/:groupId",
+const getGroupDetailsRouter = Router();
+getGroupDetailsRouter.get(
+  "/:groupId",
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const { groupId } = req.params;
@@ -18,3 +18,5 @@ app.get(
     }
   }
 );
+
+export default getGroupDetailsRouter;

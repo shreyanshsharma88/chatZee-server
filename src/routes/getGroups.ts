@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-import app from "../app";
+import { NextFunction, Request, Response, Router } from "express";
 import { groupMap } from "../store";
 
-app.get("/getGroups", (req: Request, res: Response, next: NextFunction) => {
+const getGroupsRouter = Router();
+getGroupsRouter.get("/", (req: Request, res: Response, next: NextFunction) => {
     try {
       const groups = Array.from(groupMap.entries())
         .filter((group) => group[1].isDm === false)
@@ -15,3 +15,4 @@ app.get("/getGroups", (req: Request, res: Response, next: NextFunction) => {
       return res.status(500).send(error);
     }
   });
+  export default getGroupsRouter;

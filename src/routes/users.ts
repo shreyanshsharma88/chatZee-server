@@ -1,8 +1,11 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import app from "../app";
 import { groupMap, userMap } from "../store";
 
-app.get("/users/:userId", (req: Request, res: Response, next: NextFunction) => {
+const getUsersRouter = Router();
+getUsersRouter.get(
+  "/:userId",
+  (req: Request, res: Response, next: NextFunction) => {
     try {
       const { userId } = req.params;
       if (userMap.has(userId)) {
@@ -20,7 +23,7 @@ app.get("/users/:userId", (req: Request, res: Response, next: NextFunction) => {
                   : `${value[0]}**${userId}`,
               };
           });
-  
+
           return res.status(200).send(users);
         }
         return res.status(401).send("User not found");
@@ -28,4 +31,7 @@ app.get("/users/:userId", (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
       return res.status(500).send(error);
     }
-  });
+  }
+);
+
+export default getUsersRouter;
