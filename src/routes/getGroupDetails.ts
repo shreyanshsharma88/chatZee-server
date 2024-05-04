@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { IGroupMap, groupMap, userMap } from "../store";
 
-const getGroupDetailsRouter = Router();
+export const getGroupDetailsRouter = Router();
 getGroupDetailsRouter.get(
   "/:groupId",
   (req: Request, res: Response, next: NextFunction) => {
@@ -18,5 +18,3 @@ getGroupDetailsRouter.get(
     }
   }
 );
-
-export default getGroupDetailsRouter;

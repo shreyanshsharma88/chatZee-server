@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 import app from "../app";
 import { userMap } from "../store";
 
-const loginRouter = Router();
+export const loginRouter = Router();
 
 loginRouter.post(
   "/",
@@ -28,4 +28,3 @@ loginRouter.post(
   }
 );
 
-export default loginRouter;

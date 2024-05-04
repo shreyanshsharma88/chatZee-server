@@ -1,3 +1,5 @@
+import { WebSocket } from "ws";
+
 export interface IGroupMap {
   groupName: string;
   users?: { id: string; userName: string }[];
@@ -5,5 +7,10 @@ export interface IGroupMap {
   isDm: boolean;
 }
 
-export const userMap = new Map();
+export interface IUserMap {
+  userName: string;
+  socket?: WebSocket
+}
+
+export const userMap = new Map<string , IUserMap>();
 export const groupMap = new Map<string, IGroupMap>();

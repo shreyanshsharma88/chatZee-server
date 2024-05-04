@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { IGroupMap, groupMap, userMap } from "../store";
 
-const addUserToGroupRouter = Router()
+export const addUserToGroupRouter = Router()
 addUserToGroupRouter.post(
     "/",
     (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +14,7 @@ addUserToGroupRouter.post(
           const group = groupMap.get(groupId);
           group?.users?.push({
             id: userId,
-            userName: userMap.get(userId).userName,
+            userName: userMap.get(userId)?.userName ?? '',
           });
           groupMap.set(groupId, group as IGroupMap);
           return res.status(200).send(group?.users);
@@ -24,4 +24,3 @@ addUserToGroupRouter.post(
       }
     }
   );
-  export default addUserToGroupRouter;

@@ -22,7 +22,7 @@ import { groupMap, userMap } from "./store";
         groupMap.get(groupId)?.chat?.push({
           userId,
           message: data.message.toString(),
-          userName: userMap.get(userId).userName,
+          userName: userMap.get(userId)?.userName ?? '',
         });
         const response = JSON.stringify({
           userId,

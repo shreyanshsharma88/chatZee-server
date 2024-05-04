@@ -1,11 +1,13 @@
 import cors from "cors";
 import express from "express";
-import addGroupRouter from "./routes/addGroup";
-import addUserToGroupRouter from "./routes/addToGroup";
-import getGroupDetailsRouter from "./routes/getGroupDetails";
-import getGroupsRouter from "./routes/getGroups";
-import loginRouter from "./routes/login";
-import getUsersRouter from "./routes/users";
+import {
+  getGroupsRouter,
+  addGroupRouter,
+  addUserToGroupRouter,
+  getGroupDetailsRouter,
+  getUsersRouter,
+  loginRouter,
+} from "./routes";
 import { parse } from "url";
 import { userMap } from "./store";
 import webSocketServer from "./webSocket";
@@ -33,18 +35,17 @@ export const server = app.listen(8080, () => {
 });
 export default app;
 
-
 server.on("upgrade", (request, socket, head: Buffer) => {
   const { query } = parse(request.url ?? "");
 
-  const userId = query?.slice(7);
+  const userId = query!.slice(7);
 
   if (!userMap.has(userId)) {
     request.destroy();
   }
 
   webSocketServer.handleUpgrade(request, socket, head as Buffer, (socket) => {
-    const { userName } = userMap.get(userId);
+    const  userName  = userMap.get(userId)?.userName ?? '';
 
     userMap.set(userId, { userName, socket });
 

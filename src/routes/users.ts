@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import app from "../app";
 import { groupMap, userMap } from "../store";
 
-const getUsersRouter = Router();
+export const getUsersRouter = Router();
 getUsersRouter.get(
   "/:userId",
   (req: Request, res: Response, next: NextFunction) => {
@@ -34,4 +34,3 @@ getUsersRouter.get(
   }
 );
 
-export default getUsersRouter;
