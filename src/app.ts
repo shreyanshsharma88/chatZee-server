@@ -11,6 +11,7 @@ import {
 import { parse } from "url";
 import { userMap } from "./store";
 import webSocketServer from "./webSocket";
+import { getUserDetailsRouter } from "./routes/user";
 
 const app = express();
 const corsOptions = {
@@ -29,6 +30,7 @@ app.use("/addUserToGroup", addUserToGroupRouter);
 app.use("/getGroupDetails", getGroupDetailsRouter);
 app.use("/getGroups", getGroupsRouter);
 app.use("/users", getUsersRouter);
+app.use("/user", getUserDetailsRouter);
 
 export const server = app.listen(8080, () => {
   console.log("Server up at 8080");
@@ -45,7 +47,7 @@ server.on("upgrade", (request, socket, head: Buffer) => {
   }
 
   webSocketServer.handleUpgrade(request, socket, head as Buffer, (socket) => {
-    const  userName  = userMap.get(userId)?.userName ?? '';
+    const userName = userMap.get(userId)?.userName ?? "";
 
     userMap.set(userId, { userName, socket });
 
