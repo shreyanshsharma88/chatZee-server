@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-import app from "../app";
+import app from ".";
 import { groupMap, userMap } from "../store";
 
 export const getUsersRouter = Router();
@@ -33,4 +33,3 @@ getUsersRouter.get(
     }
   }
 );
-

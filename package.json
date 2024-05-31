@@ -4,9 +4,9 @@
   "description": "Test Server",
   "main": "src/server.ts",
   "scripts": {
-      "dev": "ts-node-dev src/app.ts",
+      "dev": "ts-node-dev src/api/index.ts",
       "build": "tsc",
-      "start": "tsc && node dist/app.js"
+      "start": "tsc && node dist/api/index.js"
   },
   "author": "Shreyansh Sharma",
   "dependencies": {

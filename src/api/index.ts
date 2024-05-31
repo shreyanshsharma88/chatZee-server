@@ -1,5 +1,5 @@
 import cors from "cors";
-import express from "express";
+import express, { Router } from "express";
 import {
   getGroupsRouter,
   addGroupRouter,
@@ -7,11 +7,11 @@ import {
   getGroupDetailsRouter,
   getUsersRouter,
   loginRouter,
-} from "./routes";
+} from "./exports";
 import { parse } from "url";
-import { userMap } from "./store";
-import webSocketServer from "./webSocket";
-import { getUserDetailsRouter } from "./routes/user";
+import { userMap } from "../store";
+import webSocketServer from "../webSocket";
+import { getUserDetailsRouter } from "./user";
 
 const app = express();
 const corsOptions = {
@@ -24,6 +24,13 @@ app.use(cors(corsOptions));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+const testRouter = Router();
+testRouter.get("", (req, res) => {
+  res.send("Hello there");
+  console.log("running");
+}); 
+app.use("/", testRouter);
 app.use("/login", loginRouter);
 app.use("/addGroup", addGroupRouter);
 app.use("/addUserToGroup", addUserToGroupRouter);
@@ -32,8 +39,8 @@ app.use("/getGroups", getGroupsRouter);
 app.use("/users", getUsersRouter);
 app.use("/user", getUserDetailsRouter);
 
-export const server = app.listen(8080, () => {
-  console.log("Server up at 8080");
+export const server = app.listen(3000, () => {
+  console.log("Server up at 3000");
 });
 export default app;
 
