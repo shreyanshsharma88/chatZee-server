@@ -39,8 +39,8 @@ app.use("/getGroups", getGroupsRouter);
 app.use("/users", getUsersRouter);
 app.use("/user", getUserDetailsRouter);
 
-export const server = app.listen(3000, () => {
-  console.log("Server up at 3000");
+export const server = app.listen(8080, () => {
+  console.log("Server up at 8080");
 });
 export default app;
 
