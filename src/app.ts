@@ -7,11 +7,11 @@ import {
   getGroupDetailsRouter,
   getUsersRouter,
   loginRouter,
-} from "./exports";
+} from "./api/exports";
 import { parse } from "url";
-import { userMap } from "../store";
-import webSocketServer from "../webSocket";
-import { getUserDetailsRouter } from "./user";
+import { userMap } from "./store";
+import webSocketServer from "./webSocket";
+import { getUserDetailsRouter } from "./api/user";
 
 const app = express();
 const corsOptions = {
@@ -29,7 +29,7 @@ const testRouter = Router();
 testRouter.get("", (req, res) => {
   res.send("Hello there");
   console.log("running");
-}); 
+});
 app.use("/", testRouter);
 app.use("/login", loginRouter);
 app.use("/addGroup", addGroupRouter);

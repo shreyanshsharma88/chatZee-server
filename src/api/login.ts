@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { v4 as uuid } from "uuid";
-import app from ".";
 import { userMap } from "../store";
 
 export const loginRouter = Router();
