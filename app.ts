@@ -1,17 +1,15 @@
 import cors from "cors";
 import express, { Router } from "express";
-import {
-  getGroupsRouter,
-  addGroupRouter,
-  addUserToGroupRouter,
-  getGroupDetailsRouter,
-  getUsersRouter,
-  loginRouter,
-} from "./api/exports";
 import { parse } from "url";
-import { userMap } from "./store";
-import webSocketServer from "./webSocket";
-import { getUserDetailsRouter } from "./api/user";
+import { loginRouter } from "./src/api/login";
+import { addGroupRouter } from "./src/api/addGroup";
+import { addUserToGroupRouter } from "./src/api/addToGroup";
+import { getGroupDetailsRouter } from "./src/api/getGroupDetails";
+import { getGroupsRouter } from "./src/api/getGroups";
+import { getUsersRouter } from "./src/api/users";
+import { getUserDetailsRouter } from "./src/api/user";
+import { userMap } from "./src/store";
+import webSocketServer from "./src/webSocket";
 
 const app = express();
 const corsOptions = {
