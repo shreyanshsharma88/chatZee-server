@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { pool } from "../db/dbConnection";
 import bcrypt from "bcrypt";
+import jsonwebtoken from "jsonwebtoken";
+import { JWT_SECRET } from "../utils/constants";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -19,16 +21,28 @@ export const signup = async (req: Request, res: Response) => {
       "insert into users(username, password_hash) values($1, $2) returning *",
       [userName, passwordHash]
     );
+
+    const token = jsonwebtoken.sign(
+      {
+        id: user.rows[0].id,
+        socket: null,
+      },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
     return res.status(201).send({
       status: 200,
       message: "User created",
       id: user.rows[0].id,
+      token,
     });
   } catch (e) {
     console.log(e);
     return res.status(500).send({
       message: "Error",
       status: 500,
+      e
     });
   }
 };
@@ -55,40 +69,44 @@ export const login = async (req: Request, res: Response) => {
         message: "Invalid password",
       });
     }
+    const token = jsonwebtoken.sign({ id: user.id, socket: null }, JWT_SECRET, {
+      expiresIn: "1d",
+    });
     return res.status(200).send({
       status: 200,
       message: "Login successful",
       id: user.id,
+      token,
     });
   } catch (e) {
     console.log(e);
     return res.status(500).send({
       message: "Error",
       status: 500,
+      e
     });
   }
 };
 
-
+// TODO: ADD PAGINATION
 export const getUser = async (req: Request, res: Response) => {
   try {
-    const id  = (req.headers as any)['userid'];
-
-    const { exist, user } = await getUserById(id);
-    console.log({
-      exist,
-      id
-    });
-    
-    if (exist === null) {
-      throw new Error("Error");
-    }
-    if (exist === false ) {
-      return res.status(404).send({
-        status: 401,
-        message: "User not found",
+    const { all } = req.query;
+    const { user, user_id } = req.body;
+    if (all === "true") {
+      const users = await pool.query("select * from users");
+      return res.status(200).send({
+        status: 200,
+        users: users.rows.map((user) => {
+          if (user.id === user_id) return;
+          return {
+            id: user.id,
+            userName: user.username,
+          };
+        }),
       });
     }
+
     return res.status(200).send({
       status: 200,
       user: {
@@ -101,12 +119,10 @@ export const getUser = async (req: Request, res: Response) => {
     return res.status(500).send({
       message: "Error",
       status: 500,
-      e
+      e,
     });
   }
 };
-
-
 
 export const checkUserExist = async (userName: string) => {
   try {

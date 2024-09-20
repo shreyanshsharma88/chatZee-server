@@ -6,23 +6,9 @@ import { pool } from "../db/dbConnection";
 
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
-    const id = (req.headers as any)["userid"];
-    if (!id) {
-      return res.status(401).send({
-        message: "Unauthorized",
-        status: 401,
-      });
-    }
-    const { exist } = await getUserById(id);
-    if (!exist) {
-      return res.status(401).send({
-        message: "User not found",
-        status: 401,
-      });
-    }
-
+    const { user_id } = req.body;
     const [alreadyAddedGroups, groups] = await Promise.all([
-      pool.query("select * from group_users where user_id = $1", [id]),
+      pool.query("select * from group_users where user_id = $1", [user_id]),
       allGroupsAndDMs("GROUP"),
     ]);
 
@@ -94,25 +80,8 @@ export const getGroup = async (req: Request, res: Response) => {
 
 export const addUserToGroup = async (req: Request, res: Response) => {
   try {
-    const user_id = (req.headers as any)["userid"];
     const { group_id } = req.params;
-    if (!user_id || !group_id) {
-      return res.status(401).send({
-        message: "Unauthorized",
-        status: 401,
-      });
-    }
-    const { exist } = await getUserById(user_id);
-
-    if (exist === false) {
-      return res.status(400).send({
-        message: "User not found",
-        status: 400,
-      });
-    }
-    if(exist === null) {
-       throw new Error("Error");
-    }
+    const user_id = req.body.user_id;
     const group = await getGroupById(group_id);
     if (!group.exist) {
       return res.status(400).send({
@@ -127,15 +96,10 @@ export const addUserToGroup = async (req: Request, res: Response) => {
         status: 400,
       });
     }
-
-    console.log({
-        group_id,
-        user_id,
-    })
-    await pool.query("insert into group_users( group_id, user_id ) values($1, $2)", [
-      group_id,
-      user_id,
-    ]);
+    await pool.query(
+      "insert into group_users( group_id, user_id ) values($1, $2)",
+      [group_id, user_id]
+    );
     return res.status(200).send({
       status: 200,
       message: "User added to group",
@@ -152,29 +116,22 @@ export const addUserToGroup = async (req: Request, res: Response) => {
 
 export const addGroup = async (req: Request, res: Response) => {
   try {
-    const user_id = (req.headers as any)["userid"];
-    const { groupName, type } = req.body;
-    if (!user_id || !groupName || !type) {
+    const { groupName, type, user_id } = req.body;
+    if (!groupName || !type) {
       return res.status(401).send({
-        message: "Unauthorized",
+        message: "Groupname and type required",
         status: 401,
       });
     }
-    const { exist } = await getUserById(user_id);
-    if (!exist) {
-      return res.status(400).send({
-        message: "User not found",
-        status: 400,
-      });
-    }
+
     const group = await pool.query(
       "insert into groups(groupname, type) values($1, $2) returning *",
       [groupName, type]
     );
-    await pool.query("insert into group_users (group_id, user_id) values($1, $2)", [
-      group.rows[0].id,
-      user_id,
-    ]);
+    await pool.query(
+      "insert into group_users (group_id, user_id) values($1, $2)",
+      [group.rows[0].id, user_id]
+    );
 
     return res.status(200).send({
       status: 200,
