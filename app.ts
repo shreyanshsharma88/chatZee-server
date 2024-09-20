@@ -1,10 +1,10 @@
 import cors from "cors";
 import express, { Router } from "express";
 import { parse } from "url";
-import { pool } from "./src/db/dbConnection";
+import { chatRouter } from "./src/routes/chats";
 import { getAllGroupsRouter, groupRouter } from "./src/routes/groups";
 import { loginRoute, signupRoute } from "./src/routes/signup-login";
-import { getAllUsersRouter, getUserDetailRouter } from "./src/routes/user";
+import { userDetailRouter } from "./src/routes/user";
 import { userMap } from "./src/store";
 import { AuthChecker } from "./src/utils/authChecker";
 import webSocketServer from "./src/webSocket";
@@ -36,7 +36,8 @@ authRouter.use(AuthChecker);
 app.use("/api", authRouter);
 authRouter.use("/group", groupRouter);
 authRouter.use("/getGroups", getAllGroupsRouter);
-authRouter.use("/user", getUserDetailRouter);
+authRouter.use("/user", userDetailRouter);
+authRouter.use("/chat", chatRouter);
 
 export const server = app.listen(8080, () => {
   console.log("Server up at 8080");

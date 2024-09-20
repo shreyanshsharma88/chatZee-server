@@ -1,4 +1,3 @@
-import { parse } from "url";
 import WebSocket, { WebSocketServer } from "ws";
 import { groupMap, userMap } from "./store";
 
