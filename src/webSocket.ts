@@ -25,12 +25,12 @@ webSocketServer.on(
           "insert into chats (message, sent_by, sent_to) values ($1, $2, $3)",
           [data.message, userId, groupId]
         ),
-        pool.query("select user_id from group_members where group_id = $1", [
+        pool.query("select user_id from group_users where group_id = $1", [
           groupId,
         ]),
       ]);
 
-      await pool.query("select user_id");
+      const userIdsInGroup = usersInGroup.rows.map(({ user_id }) => user_id);
 
       const response = JSON.stringify({
         userId,
@@ -38,7 +38,7 @@ webSocketServer.on(
       });
 
       for (const [_, { socket, userId }] of TokenSocketMap.entries()) {
-        if (usersInGroup.rows.includes(userId)) {
+        if (userIdsInGroup.includes(userId)) {
           socket?.send(response);
         }
       }

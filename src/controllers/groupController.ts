@@ -77,7 +77,7 @@ export const getGroup = async (req: Request, res: Response) => {
       status: 200,
       group: {
         id: group.group.id,
-        groupName: group.group.group_name,
+        groupName: group.group.groupname,
         type: group.group.type,
         users: userDetails,
       },
