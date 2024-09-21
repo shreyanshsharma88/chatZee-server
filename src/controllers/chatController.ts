@@ -1,5 +1,6 @@
 import { Response, Request } from "express";
 import { pool } from "../db/dbConnection";
+import { paginateData } from "../utils/paginator";
 export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
@@ -27,18 +28,4 @@ export const getChats = async (req: Request, res: Response) => {
       e,
     });
   }
-};
-
-const paginateData = ({
-  data,
-  limit,
-  page,
-}: {
-  data: any[];
-  limit: number;
-  page: number;
-}) => {
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
-  return data.slice(startIndex, endIndex);
 };

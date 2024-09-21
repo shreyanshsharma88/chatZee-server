@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import { getUserById } from "./profileController";
 import { pool } from "../db/dbConnection";
-
-// TODO: ADD AN AUTHENTICATION MIDDLEWARE
+import { paginateData } from "../utils/paginator";
 
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
     const { user_id } = req.body;
+    const { all, page, limit } = req.query;
+    let responseData;
     const [alreadyAddedGroups, groups] = await Promise.all([
       pool.query("select * from group_users where user_id = $1", [user_id]),
       allGroupsAndDMs("GROUP"),
@@ -19,9 +20,21 @@ export const getAllGroups = async (req: Request, res: Response) => {
       return [...acc, { ...group, isAlreadyAdded: !!isAlreadyAdded }];
     }, []);
 
+    if (all === "true") {
+      const paginatedData = paginateData({
+        data: userGroupData,
+        limit: Number(limit),
+        page: Number(page),
+      });
+      responseData = paginatedData;
+    }
+    if (!all) {
+      responseData = userGroupData;
+    }
     return res.status(200).send({
       status: 200,
-      groups: userGroupData,
+      groups: responseData,
+      total: userGroupData.length,
     });
   } catch (e) {
     console.log(e);

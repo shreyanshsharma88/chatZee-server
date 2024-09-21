@@ -3,6 +3,7 @@ import { pool } from "../db/dbConnection";
 import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 import { JWT_SECRET } from "../utils/constants";
+import { paginateData } from "../utils/paginator";
 
 export const signup = async (req: Request, res: Response) => {
   try {
@@ -42,7 +43,7 @@ export const signup = async (req: Request, res: Response) => {
     return res.status(500).send({
       message: "Error",
       status: 500,
-      e
+      e,
     });
   }
 };
@@ -83,7 +84,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(500).send({
       message: "Error",
       status: 500,
-      e
+      e,
     });
   }
 };
@@ -91,19 +92,41 @@ export const login = async (req: Request, res: Response) => {
 // TODO: ADD PAGINATION
 export const getUser = async (req: Request, res: Response) => {
   try {
-    const { all } = req.query;
+    const { all, page, limit } = req.query;
     const { user, user_id } = req.body;
     if (all === "true") {
       const users = await pool.query("select * from users");
-      return res.status(200).send({
-        status: 200,
-        users: users.rows.map((user) => {
+
+      // const userDetails = await Promise.all(
+      //   users.rows.map(async (user: any) => {
+      //     const { exist, user: userData } = await getUserById(user.user_id);
+      //     if (exist === false) return;
+      //     return {
+      //       id: userData.id,
+      //       userName: userData.username,
+      //     };
+      //   })
+      // );
+      const paginatedData = paginateData({
+        data: users.rows,
+        limit: Number(limit),
+        page: Number(page),
+      });
+      const response = await Promise.all(
+        paginatedData.map(async (user: any) => {
           if (user.id === user_id) return;
+          // TODO: LOGIC FOR ALREADY EXISTS
+          // const dmAlreadyExists = await pool.query('select * from group_users where ')
           return {
             id: user.id,
             userName: user.username,
           };
-        }),
+        })
+      );
+      return res.status(200).send({
+        status: 200,
+        users: response,
+        total: users.rows.length
       });
     }
 

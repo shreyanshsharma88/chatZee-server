@@ -8,6 +8,9 @@ import { userDetailRouter } from "./src/routes/user";
 import { userMap } from "./src/store";
 import { AuthChecker } from "./src/utils/authChecker";
 import webSocketServer from "./src/webSocket";
+import jsonwebtoken from "jsonwebtoken";
+import { WebSocket } from "ws";
+import { JWT_SECRET } from "./src/utils/constants";
 
 const app = express();
 const corsOptions = {
@@ -47,22 +50,27 @@ export default app;
 server.on("upgrade", (request, socket, head: Buffer) => {
   const { query } = parse(request.url ?? "");
 
-  const userId = query!.slice(7);
-
-  if (!userMap.has(userId)) {
-    request.destroy();
-  }
+  const token = query!.slice(7);
+  console.log({ token });
 
   webSocketServer.handleUpgrade(request, socket, head as Buffer, (socket) => {
-    const userName = userMap.get(userId)?.userName ?? "";
-
-    userMap.set(userId, { userName, socket });
-
-    const metadata = {
-      userData: { userName },
-      userId,
-    };
-
-    webSocketServer.emit("connection", socket, metadata);
+    jsonwebtoken.verify(token, JWT_SECRET, (err: any, jwtUser: any) => {
+      if (err) {
+        console.log("Invalid token");
+        request.destroy();
+        return;
+      }
+      TokenSocketMap.set(token, { socket: socket, userId: jwtUser.id });
+      const metadata = {
+        userId: jwtUser.id,
+        token,
+      };
+      webSocketServer.emit("connection", socket, metadata);
+    });
   });
 });
+
+export const TokenSocketMap = new Map<
+  string,
+  { socket: WebSocket; userId: string }
+>();
