@@ -30,6 +30,8 @@ testRouter.get("/health", (req, res) => {
   console.log("running");
 });
 
+
+//  TODO: ADD MODELS
 app.use("/", testRouter);
 app.use("/login", loginRoute);
 app.use("/signup", signupRoute);
