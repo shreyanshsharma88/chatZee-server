@@ -1,17 +1,23 @@
 import { Response, Request } from "express";
-import { pool } from "../db/dbConnection";
 import { paginateData } from "../utils/paginator";
+import Chat from "../models/chats";
 export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
     const { group_id } = req.params;
 
-    const groupChats = await pool.query(
-      "select * from chats where group_id = $1",
-      [group_id]
-    );
+    // const groupChats = await pool.query(
+    //   "select * from chats where sent_to = $1",
+    //   [group_id]
+    // );
+
+    const groupChats = await Chat.findAll({
+      where: {
+        sent_to: group_id,
+      },
+    });
     const paginatedData = paginateData({
-      data: groupChats.rows,
+      data: groupChats,
       limit: Number(limit),
       page: Number(page),
     });

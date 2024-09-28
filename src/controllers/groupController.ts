@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { getUserById } from "./profileController";
-import { pool } from "../db/dbConnection";
 import { paginateData } from "../utils/paginator";
+import Group from "../models/groups";
+import GroupUser from "../models/groupUsers";
 
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
@@ -9,12 +10,17 @@ export const getAllGroups = async (req: Request, res: Response) => {
     const { all, page, limit } = req.query;
     let responseData;
     const [alreadyAddedGroups, groups] = await Promise.all([
-      pool.query("select * from group_users where user_id = $1", [user_id]),
+      // pool.query("select * from group_users where user_id = $1", [user_id]),
+      GroupUser.findAll({
+        where: {
+          user_id: user_id,
+        },
+      }),
       allGroupsAndDMs("GROUP"),
     ]);
 
     const userGroupData = groups.reduce((acc: any, group: any) => {
-      const isAlreadyAdded = alreadyAddedGroups.rows.find(
+      const isAlreadyAdded = alreadyAddedGroups.find(
         (g: any) => g.group_id === group.id
       );
       return [...acc, { ...group, isAlreadyAdded: !!isAlreadyAdded }];
@@ -59,14 +65,19 @@ export const getGroup = async (req: Request, res: Response) => {
         message: "Group not found",
       });
     }
-    const users = await pool.query(
-      "select * from group_users where group_id = $1",
-      [groupId]
-    );
+    // const users = await pool.query(
+      // "select * from group_users where group_id = $1",
+      // [groupId]
+    // );
+    const users = await GroupUser.findAll({
+      where: {
+        group_id: groupId,
+      },
+    });
     const userDetails = await Promise.all(
-      users.rows.map(async (user: any) => {
+      users.map(async (user: any) => {
         const { exist, user: userData } = await getUserById(user.user_id);
-        if (exist === false) return;
+        if (exist === false || !userData) return;
         return {
           id: userData.id,
           userName: userData.username,
@@ -76,9 +87,9 @@ export const getGroup = async (req: Request, res: Response) => {
     return res.status(200).send({
       status: 200,
       group: {
-        id: group.group.id,
-        groupName: group.group.groupname,
-        type: group.group.type,
+        id: group.group?.id,
+        groupName: group.group?.groupname,
+        type: group.group?.type,
         users: userDetails,
       },
     });
@@ -109,10 +120,14 @@ export const addUserToGroup = async (req: Request, res: Response) => {
         status: 400,
       });
     }
-    await pool.query(
-      "insert into group_users( group_id, user_id ) values($1, $2)",
-      [group_id, user_id]
-    );
+    // await pool.query(
+    //   "insert into group_users( group_id, user_id ) values($1, $2)",
+    //   [group_id, user_id]
+    // );
+    await GroupUser.create({
+      group_id: group_id,
+      user_id: user_id,
+    });
     return res.status(200).send({
       status: 200,
       message: "User added to group",
@@ -137,14 +152,24 @@ export const addGroup = async (req: Request, res: Response) => {
       });
     }
 
-    const group = await pool.query(
-      "insert into groups(groupname, type) values($1, $2) returning *",
-      [groupName, type]
-    );
-    await pool.query(
-      "insert into group_users (group_id, user_id) values($1, $2)",
-      [group.rows[0].id, user_id]
-    );
+    // const group = await pool.query(
+    // "insert into groups(groupname, type) values($1, $2) returning *",
+    // [groupName, type]
+    // );
+
+    // await pool.query(
+    // "insert into group_users (group_id, user_id) values($1, $2)",
+    // [group.rows[0].id, user_id]
+    // );
+    const group = await Group.create({
+      groupname: groupName,
+      type: type,
+    });
+
+    await GroupUser.create({
+      group_id: group.id,
+      user_id: user_id,
+    });
 
     return res.status(200).send({
       status: 200,
@@ -162,10 +187,15 @@ export const addGroup = async (req: Request, res: Response) => {
 
 export const allGroupsAndDMs = async (type: "GROUP" | "INDIVIDUAL") => {
   try {
-    const groups = await pool.query("select * from groups where type = $1", [
-      type,
-    ]);
-    return groups.rows;
+    // const groups = await pool.query("select * from groups where type = $1", [
+    // type,
+    // ]);
+    const groups = await Group.findAll({
+      where: {
+        type: type,
+      },
+    });
+    return groups;
   } catch (e) {
     return [];
   }
@@ -173,8 +203,13 @@ export const allGroupsAndDMs = async (type: "GROUP" | "INDIVIDUAL") => {
 
 export const getGroupById = async (id: string) => {
   try {
-    const group = await pool.query("select * from groups where id = $1", [id]);
-    if (!!group.rows[0].id) return { exist: true, group: group.rows[0] };
+    // const group = await pool.query("select * from groups where id = $1", [id]);
+    const group = await Group.findOne({
+      where: {
+        id: id,
+      },
+    });
+    if (!!group?.id) return { exist: true, group: group };
     return { exist: false, group: null };
   } catch (e) {
     return { exist: null, group: null };
@@ -183,11 +218,17 @@ export const getGroupById = async (id: string) => {
 
 const alreadyAddedInGroup = async (userId: string, groupId: string) => {
   try {
-    const group = await pool.query(
-      "select * from group_users where user_id = $1 and group_id = $2",
-      [userId, groupId]
-    );
-    return !!group.rows[0];
+    // const group = await pool.query(
+    // "select * from group_users where user_id = $1 and group_id = $2",
+    // [userId, groupId]
+    // );
+    const group = await GroupUser.findOne({
+      where: {
+        user_id: userId,
+        group_id: groupId,
+      },
+    });
+    return !!group?.id;
   } catch (e) {
     return false;
   }

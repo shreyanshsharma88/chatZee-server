@@ -1,7 +1,8 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { groupMap, userMap } from "./store";
-import { pool } from "./db/dbConnection";
 import { TokenSocketMap } from "../app";
+import Chat from "./models/chats";
+import GroupUser from "./models/groupUsers";
 
 const webSocketServer = new WebSocketServer({ noServer: true });
 
@@ -21,16 +22,27 @@ webSocketServer.on(
       const userId = data.userId;
 
       const [_, usersInGroup] = await Promise.all([
-        pool.query(
-          "insert into chats (message, sent_by, sent_to) values ($1, $2, $3)",
-          [data.message, userId, groupId]
-        ),
-        pool.query("select user_id from group_users where group_id = $1", [
-          groupId,
-        ]),
+        // pool.query(
+        //   "insert into chats (message, sent_by, sent_to) values ($1, $2, $3)",
+        //   [data.message, userId, groupId]
+        // ),
+        // pool.query("select user_id from group_users where group_id = $1", [
+        //   groupId,
+        // ]),
+        Chat.create({
+          message: data.message,
+          sent_by: userId,
+          sent_to: groupId,
+        }),
+        GroupUser.findAll({
+          attributes: ["user_id"],
+          where: {
+            group_id: groupId,
+          },
+        })
       ]);
 
-      const userIdsInGroup = usersInGroup.rows.map(({ user_id }) => user_id);
+      const userIdsInGroup = usersInGroup.map(({ user_id }) => user_id);
 
       const response = JSON.stringify({
         userId,

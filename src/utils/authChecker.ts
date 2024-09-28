@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from "express";
-import { pool } from "../db/dbConnection";
 import jsonwebtoken from "jsonwebtoken";
 import { JWT_SECRET } from "./constants";
+import User from "../models/user";
 
 export const AuthChecker = async (
   req: Request,
@@ -28,15 +28,22 @@ export const AuthChecker = async (
 
       const { id } = jwtUser;
 
-      const user = await pool.query("select * from users where id = $1", [id]);
-      if (user.rows.length === 0) {
+      // const user = await pool.query("select * from users where id = $1", [id]);
+      const user = await User.findOne({
+        where: {
+          id : id
+        }
+      })
+
+      console.log({user});
+      if (user === null) {
         return res.status(401).send({
           message: "User not found",
           status: 401,
         });
       }
       req.body.user_id = user_id;
-      req.body.user = user.rows[0];
+      req.body.user = user;
       next();
     });
   } catch (e) {
