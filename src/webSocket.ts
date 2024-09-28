@@ -1,11 +1,11 @@
 import WebSocket, { WebSocketServer } from "ws";
 import { groupMap, userMap } from "./store";
 import { TokenSocketMap } from "../app";
-import Chat from "./models/chats";
-import GroupUser from "./models/groupUsers";
+import { PrismaClient } from "@prisma/client";
 
 const webSocketServer = new WebSocketServer({ noServer: true });
 
+const prisma = new PrismaClient();
 webSocketServer.on(
   "connection",
   (
@@ -29,17 +29,23 @@ webSocketServer.on(
         // pool.query("select user_id from group_users where group_id = $1", [
         //   groupId,
         // ]),
-        Chat.create({
-          message: data.message,
-          sent_by: userId,
-          sent_to: groupId,
+        
+
+        prisma.chats.create({
+          data: {
+            message: data.message,
+            sent_by: userId,
+            sent_to: groupId,
+          },
         }),
-        GroupUser.findAll({
-          attributes: ["user_id"],
+        prisma.group_users.findMany({
           where: {
             group_id: groupId,
           },
-        })
+          select: {
+            user_id: true,
+          },
+        }),
       ]);
 
       const userIdsInGroup = usersInGroup.map(({ user_id }) => user_id);

@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { getUserById } from "./profileController";
 import { paginateData } from "../utils/paginator";
-import Group from "../models/groups";
-import GroupUser from "../models/groupUsers";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
     const { user_id } = req.body;
@@ -11,7 +11,7 @@ export const getAllGroups = async (req: Request, res: Response) => {
     let responseData;
     const [alreadyAddedGroups, groups] = await Promise.all([
       // pool.query("select * from group_users where user_id = $1", [user_id]),
-      GroupUser.findAll({
+      prisma.group_users.findMany({
         where: {
           user_id: user_id,
         },
@@ -66,10 +66,10 @@ export const getGroup = async (req: Request, res: Response) => {
       });
     }
     // const users = await pool.query(
-      // "select * from group_users where group_id = $1",
-      // [groupId]
+    // "select * from group_users where group_id = $1",
+    // [groupId]
     // );
-    const users = await GroupUser.findAll({
+    const users = await prisma.group_users.findMany({
       where: {
         group_id: groupId,
       },
@@ -124,9 +124,12 @@ export const addUserToGroup = async (req: Request, res: Response) => {
     //   "insert into group_users( group_id, user_id ) values($1, $2)",
     //   [group_id, user_id]
     // );
-    await GroupUser.create({
-      group_id: group_id,
-      user_id: user_id,
+    
+    await prisma.group_users.create({
+      data: {
+        group_id: group_id,
+        user_id: user_id,
+      },
     });
     return res.status(200).send({
       status: 200,
@@ -161,15 +164,20 @@ export const addGroup = async (req: Request, res: Response) => {
     // "insert into group_users (group_id, user_id) values($1, $2)",
     // [group.rows[0].id, user_id]
     // );
-    const group = await Group.create({
-      groupname: groupName,
-      type: type,
+
+    const group = await prisma.groups.create({
+      data: {
+        groupname: groupName,
+        type: type,
+      },
     });
 
-    await GroupUser.create({
-      group_id: group.id,
-      user_id: user_id,
-    });
+    await prisma.group_users.create({
+      data: {
+        group_id: group.id,
+        user_id: user_id,
+      },
+    })
 
     return res.status(200).send({
       status: 200,
@@ -190,7 +198,7 @@ export const allGroupsAndDMs = async (type: "GROUP" | "INDIVIDUAL") => {
     // const groups = await pool.query("select * from groups where type = $1", [
     // type,
     // ]);
-    const groups = await Group.findAll({
+    const groups = await prisma.groups.findMany({
       where: {
         type: type,
       },
@@ -204,7 +212,7 @@ export const allGroupsAndDMs = async (type: "GROUP" | "INDIVIDUAL") => {
 export const getGroupById = async (id: string) => {
   try {
     // const group = await pool.query("select * from groups where id = $1", [id]);
-    const group = await Group.findOne({
+    const group = await prisma.groups.findFirst({
       where: {
         id: id,
       },
@@ -222,7 +230,8 @@ const alreadyAddedInGroup = async (userId: string, groupId: string) => {
     // "select * from group_users where user_id = $1 and group_id = $2",
     // [userId, groupId]
     // );
-    const group = await GroupUser.findOne({
+   
+    const group = await prisma.group_users.findFirst({
       where: {
         user_id: userId,
         group_id: groupId,

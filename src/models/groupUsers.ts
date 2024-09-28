@@ -37,5 +37,3 @@ GroupUser.init({
     tableName: "group_users",
     timestamps: false,
 })
-
-export default GroupUser;

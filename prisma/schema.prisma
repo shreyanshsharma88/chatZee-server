@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model chats {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String
+  sent_by    String?   @db.Uuid
+  sent_to    String?   @db.Uuid
+  time_stamp DateTime? @default(now()) @db.Timestamptz(6)
+  users      users?    @relation(fields: [sent_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groups     groups?   @relation(fields: [sent_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model group_users {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  group_id String @db.Uuid
+  user_id  String @db.Uuid
+  groups   groups @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model groups {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupname   String        @db.VarChar(255)
+  type        group_type    @default(GROUP)
+  chats       chats[]
+  group_users group_users[]
+}
+
+model users {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username      String        @db.VarChar(255)
+  password_hash String        @unique @db.VarChar(255)
+  chats         chats[]
+  group_users   group_users[]
+}
+
+enum group_type {
+  INDIVIDUAL
+  GROUP
+}

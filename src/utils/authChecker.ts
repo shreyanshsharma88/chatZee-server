@@ -1,8 +1,9 @@
 import { NextFunction, Response, Request } from "express";
 import jsonwebtoken from "jsonwebtoken";
 import { JWT_SECRET } from "./constants";
-import User from "../models/user";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 export const AuthChecker = async (
   req: Request,
   res: Response,
@@ -29,13 +30,14 @@ export const AuthChecker = async (
       const { id } = jwtUser;
 
       // const user = await pool.query("select * from users where id = $1", [id]);
-      const user = await User.findOne({
+     
+      const user = await prisma.users.findUnique({
         where: {
-          id : id
-        }
-      })
+          id: id,
+        },
+      });
 
-      console.log({user});
+      console.log({ user });
       if (user === null) {
         return res.status(401).send({
           message: "User not found",

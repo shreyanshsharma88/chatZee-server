@@ -3,8 +3,9 @@ import bcrypt from "bcrypt";
 import jsonwebtoken from "jsonwebtoken";
 import { JWT_SECRET } from "../utils/constants";
 import { paginateData } from "../utils/paginator";
-import User from "../models/user";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 export const signup = async (req: Request, res: Response) => {
   try {
     const { userName, password } = req.body as any;
@@ -19,14 +20,16 @@ export const signup = async (req: Request, res: Response) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     // const user = await pool.query(
-      // "insert into users(username, password_hash) values($1, $2) returning *",
-      // [userName, passwordHash]
+    // "insert into users(username, password_hash) values($1, $2) returning *",
+    // [userName, passwordHash]
     // );
 
-    const user = await User.create({
-      username: userName,
-      password_hash: passwordHash,
-    })
+    const user = await prisma.users.create({
+      data: {
+        username: userName,
+        password_hash: passwordHash,
+      },
+    });
 
     const token = jsonwebtoken.sign(
       {
@@ -68,16 +71,23 @@ export const login = async (req: Request, res: Response) => {
       throw new Error("Error");
     }
 
-    const passwordMatch = await bcrypt.compare(password, user?.password_hash || "");
+    const passwordMatch = await bcrypt.compare(
+      password,
+      user?.password_hash || ""
+    );
     if (!passwordMatch) {
       return res.status(400).send({
         status: 400,
         message: "Invalid password",
       });
     }
-    const token = jsonwebtoken.sign({ id: user?.id, socket: null }, JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    const token = jsonwebtoken.sign(
+      { id: user?.id, socket: null },
+      JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
     return res.status(200).send({
       status: 200,
       message: "Login successful",
@@ -101,7 +111,7 @@ export const getUser = async (req: Request, res: Response) => {
     const { user, user_id } = req.body;
     if (all === "true") {
       // const users = await pool.query("select * from users");
-      const users = await User.findAndCountAll();
+      const users = await prisma.users.findMany();
 
       // const userDetails = await Promise.all(
       //   users.rows.map(async (user: any) => {
@@ -114,7 +124,7 @@ export const getUser = async (req: Request, res: Response) => {
       //   })
       // );
       const paginatedData = paginateData({
-        data: users.rows,
+        data: users,
         limit: Number(limit),
         page: Number(page),
       });
@@ -132,7 +142,7 @@ export const getUser = async (req: Request, res: Response) => {
       return res.status(200).send({
         status: 200,
         users: response,
-        total: users.rows.length,
+        total: users.length,
       });
     }
 
@@ -158,7 +168,8 @@ export const checkUserExist = async (userName: string) => {
     // const user = await pool.query("select * from users where username = $1", [
     //   userName,
     // ]);
-    const user = await User.findOne({
+
+    const user = await prisma.users.findFirst({
       where: {
         username: userName,
       },
@@ -173,11 +184,18 @@ export const checkUserExist = async (userName: string) => {
 export const getUserById = async (id: string) => {
   try {
     // const user = await pool.query("select * from users where id = $1", [id]);
-    const user = await User.findOne({
+    // const user = await User.findOne({
+    // where: {
+    // id: id,
+    // },
+    // });
+
+    const user = await prisma.users.findUnique({
       where: {
         id: id,
       },
     });
+
     if (!!user?.id) return { exist: true, user: user };
     return { exist: false, user: null };
   } catch (e) {

@@ -11,7 +11,7 @@ import webSocketServer from "./src/webSocket";
 import jsonwebtoken from "jsonwebtoken";
 import { WebSocket } from "ws";
 import { JWT_SECRET } from "./src/utils/constants";
-import { sequelize } from "./src/db/dbConnection";
+// import { sequelize } from "./src/db/dbConnection";
 
 const app = express();
 const corsOptions = {
@@ -25,14 +25,14 @@ app.use(cors(corsOptions));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log("connected to db");
-  })
-  .catch((e) => {
-    console.log(e, "error connecting to db");
-  });
+// sequelize
+//   .authenticate()
+//   .then(() => {
+//     console.log("connected to db");
+//   })
+//   .catch((e) => {
+//     console.log(e, "error connecting to db");
+//   });
 const testRouter = Router();
 testRouter.get("/health", (req, res) => {
   res.send("Hello there");

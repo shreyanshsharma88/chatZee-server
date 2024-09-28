@@ -1,6 +1,8 @@
 import { Response, Request } from "express";
 import { paginateData } from "../utils/paginator";
-import Chat from "../models/chats";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient()
 export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
@@ -10,12 +12,11 @@ export const getChats = async (req: Request, res: Response) => {
     //   "select * from chats where sent_to = $1",
     //   [group_id]
     // );
-
-    const groupChats = await Chat.findAll({
+    const groupChats = await prisma.chats.findMany({
       where: {
         sent_to: group_id,
       },
-    });
+    })
     const paginatedData = paginateData({
       data: groupChats,
       limit: Number(limit),
