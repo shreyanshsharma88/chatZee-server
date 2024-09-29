@@ -74,6 +74,7 @@ server.on("upgrade", (request, socket, head: Buffer) => {
       const metadata = {
         userId: jwtUser.id,
         token,
+        name: jwtUser.username
       };
       webSocketServer.emit("connection", socket, metadata);
     });

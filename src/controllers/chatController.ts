@@ -12,6 +12,8 @@ export const getChats = async (req: Request, res: Response) => {
     //   "select * from chats where sent_to = $1",
     //   [group_id]
     // );
+
+    // TODO: ADD USERNAME
     const groupChats = await prisma.chats.findMany({
       where: {
         sent_to: group_id,
@@ -26,7 +28,13 @@ export const getChats = async (req: Request, res: Response) => {
     // TODO: FORMAT THIS DATA IN A MORE READABLE WAY
     return res.status(200).send({
       status: 200,
-      chats: paginatedData,
+      chats: paginatedData.map((item) => ({
+        id: item.id,
+        message: item.message,
+        sentBy: item.sent_by,
+        sentTo: item.sent_to,
+        time: item.time_stamp,
+      })),
     });
   } catch (e) {
     return res.status(500).send({

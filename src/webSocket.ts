@@ -10,7 +10,7 @@ webSocketServer.on(
   "connection",
   (
     socket: WebSocket.WebSocket,
-    metadata: { token: string; userId: string }
+    metadata: { token: string; userId: string; username: string }
   ) => {
     socket.on("message", async (res: string) => {
       // TODO: THIS WONT WORK **MOST PROBABLY**
@@ -21,7 +21,7 @@ webSocketServer.on(
       const groupId = data.groupId;
       const userId = data.userId;
 
-      const [_, usersInGroup] = await Promise.all([
+      const [message, usersInGroup, user] = await Promise.all([
         // pool.query(
         //   "insert into chats (message, sent_by, sent_to) values ($1, $2, $3)",
         //   [data.message, userId, groupId]
@@ -29,7 +29,6 @@ webSocketServer.on(
         // pool.query("select user_id from group_users where group_id = $1", [
         //   groupId,
         // ]),
-        
 
         prisma.chats.create({
           data: {
@@ -46,13 +45,22 @@ webSocketServer.on(
             user_id: true,
           },
         }),
+        prisma.users.findUnique({
+          where: {
+            id: userId,
+          },
+        }),
       ]);
 
       const userIdsInGroup = usersInGroup.map(({ user_id }) => user_id);
 
       const response = JSON.stringify({
-        userId,
-        message: data.message.toString(),
+        sentBy: message.sent_by,
+        sentTo: message.sent_to,
+        message: message.toString(),
+        id: message.id,
+        time: message.time_stamp,
+        username: user?.username,
       });
 
       for (const [_, { socket, userId }] of TokenSocketMap.entries()) {

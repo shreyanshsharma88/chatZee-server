@@ -35,6 +35,7 @@ export const signup = async (req: Request, res: Response) => {
       {
         id: user.id,
         socket: null,
+        username: user.username
       },
       JWT_SECRET,
       { expiresIn: "1d" }
