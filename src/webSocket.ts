@@ -57,7 +57,7 @@ webSocketServer.on(
       const response = JSON.stringify({
         sentBy: message.sent_by,
         sentTo: message.sent_to,
-        message: message.toString(),
+        message: message.message.toString(),
         id: message.id,
         time: message.time_stamp,
         username: user?.username,
