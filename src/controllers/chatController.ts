@@ -19,13 +19,6 @@ export const getChats = async (req: Request, res: Response) => {
         sent_to: group_id,
       },
     })
-
-    console.log({
-      groupChats,
-      group_id, 
-      page,
-      limit
-    })
     const paginatedData = paginateData({
       data: groupChats,
       limit: Number(limit),

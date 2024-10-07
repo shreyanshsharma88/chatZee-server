@@ -4,6 +4,7 @@ import jsonwebtoken from "jsonwebtoken";
 import { JWT_SECRET } from "../utils/constants";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
+import { checkUserExist, dmAlreadyExists } from "../utils/user";
 
 const prisma = new PrismaClient();
 export const signup = async (req: Request, res: Response) => {
@@ -19,10 +20,6 @@ export const signup = async (req: Request, res: Response) => {
       });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    // const user = await pool.query(
-    // "insert into users(username, password_hash) values($1, $2) returning *",
-    // [userName, passwordHash]
-    // );
 
     const user = await prisma.users.create({
       data: {
@@ -35,7 +32,7 @@ export const signup = async (req: Request, res: Response) => {
       {
         id: user.id,
         socket: null,
-        username: user.username
+        username: user.username,
       },
       JWT_SECRET,
       { expiresIn: "1d" }
@@ -105,25 +102,13 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// TODO: ADD PAGINATION
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { all, page, limit } = req.query;
     const { user, user_id } = req.body;
     if (all === "true") {
-      // const users = await pool.query("select * from users");
       const users = await prisma.users.findMany();
 
-      // const userDetails = await Promise.all(
-      //   users.rows.map(async (user: any) => {
-      //     const { exist, user: userData } = await getUserById(user.user_id);
-      //     if (exist === false) return;
-      //     return {
-      //       id: userData.id,
-      //       userName: userData.username,
-      //     };
-      //   })
-      // );
       const paginatedData = paginateData({
         data: users,
         limit: Number(limit),
@@ -132,11 +117,18 @@ export const getUser = async (req: Request, res: Response) => {
       const response = await Promise.all(
         paginatedData.map(async (user: any) => {
           if (user.id === user_id) return;
-          // TODO: LOGIC FOR ALREADY EXISTS
-          // const dmAlreadyExists = await pool.query('select * from group_users where ')
+
+          const isDm = await dmAlreadyExists({
+            id: user.id,
+            userId: user_id,
+          });
+          if (isDm === null) throw new Error();
+
           return {
             id: user.id,
             userName: user.username,
+            alreadyAddedInDm: isDm.exist,
+            dmId: isDm.groupId,
           };
         })
       );
@@ -161,45 +153,5 @@ export const getUser = async (req: Request, res: Response) => {
       status: 500,
       e,
     });
-  }
-};
-
-export const checkUserExist = async (userName: string) => {
-  try {
-    // const user = await pool.query("select * from users where username = $1", [
-    //   userName,
-    // ]);
-
-    const user = await prisma.users.findFirst({
-      where: {
-        username: userName,
-      },
-    });
-    if (!!user?.id) return { exist: true, user: user };
-    return { exist: false, user: null };
-  } catch (e) {
-    return { exist: null, user: null };
-  }
-};
-
-export const getUserById = async (id: string) => {
-  try {
-    // const user = await pool.query("select * from users where id = $1", [id]);
-    // const user = await User.findOne({
-    // where: {
-    // id: id,
-    // },
-    // });
-
-    const user = await prisma.users.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
-    if (!!user?.id) return { exist: true, user: user };
-    return { exist: false, user: null };
-  } catch (e) {
-    return { exist: null, user: null };
   }
 };

@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { getUserById } from "./profileController";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
+import { getUserById } from "../utils/user";
+import { allGroupsAndDMs, alreadyAddedInGroup, getGroupById } from "../utils/groups";
 
 const prisma = new PrismaClient();
 export const getAllGroups = async (req: Request, res: Response) => {
@@ -10,7 +11,6 @@ export const getAllGroups = async (req: Request, res: Response) => {
     const { all, page, limit } = req.query;
     let responseData;
     const [alreadyAddedGroups, groups] = await Promise.all([
-      // pool.query("select * from group_users where user_id = $1", [user_id]),
       prisma.group_users.findMany({
         where: {
           user_id: user_id,
@@ -65,10 +65,6 @@ export const getGroup = async (req: Request, res: Response) => {
         message: "Group not found",
       });
     }
-    // const users = await pool.query(
-    // "select * from group_users where group_id = $1",
-    // [groupId]
-    // );
     const users = await prisma.group_users.findMany({
       where: {
         group_id: groupId,
@@ -120,11 +116,6 @@ export const addUserToGroup = async (req: Request, res: Response) => {
         status: 400,
       });
     }
-    // await pool.query(
-    //   "insert into group_users( group_id, user_id ) values($1, $2)",
-    //   [group_id, user_id]
-    // );
-    
     await prisma.group_users.create({
       data: {
         group_id: group_id,
@@ -154,17 +145,6 @@ export const addGroup = async (req: Request, res: Response) => {
         status: 401,
       });
     }
-
-    // const group = await pool.query(
-    // "insert into groups(groupname, type) values($1, $2) returning *",
-    // [groupName, type]
-    // );
-
-    // await pool.query(
-    // "insert into group_users (group_id, user_id) values($1, $2)",
-    // [group.rows[0].id, user_id]
-    // );
-
     const group = await prisma.groups.create({
       data: {
         groupname: groupName,
@@ -190,55 +170,5 @@ export const addGroup = async (req: Request, res: Response) => {
       status: 500,
       e,
     });
-  }
-};
-
-export const allGroupsAndDMs = async (type: "GROUP" | "INDIVIDUAL") => {
-  try {
-    // const groups = await pool.query("select * from groups where type = $1", [
-    // type,
-    // ]);
-    const groups = await prisma.groups.findMany({
-      where: {
-        type: type,
-      },
-    });
-    return groups;
-  } catch (e) {
-    return [];
-  }
-};
-
-export const getGroupById = async (id: string) => {
-  try {
-    // const group = await pool.query("select * from groups where id = $1", [id]);
-    const group = await prisma.groups.findFirst({
-      where: {
-        id: id,
-      },
-    });
-    if (!!group?.id) return { exist: true, group: group };
-    return { exist: false, group: null };
-  } catch (e) {
-    return { exist: null, group: null };
-  }
-};
-
-const alreadyAddedInGroup = async (userId: string, groupId: string) => {
-  try {
-    // const group = await pool.query(
-    // "select * from group_users where user_id = $1 and group_id = $2",
-    // [userId, groupId]
-    // );
-   
-    const group = await prisma.group_users.findFirst({
-      where: {
-        user_id: userId,
-        group_id: groupId,
-      },
-    });
-    return !!group?.id;
-  } catch (e) {
-    return false;
   }
 };
