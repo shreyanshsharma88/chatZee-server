@@ -45,7 +45,7 @@ app.use("/signup", signupRoute);
 
 const authRouter = Router();
 authRouter.use(AuthChecker);
-app.use("/auth", authRouter);
+app.use("/api", authRouter);
 authRouter.use("/group", groupRouter);
 authRouter.use("/getGroups", getAllGroupsRouter);
 authRouter.use("/user", userDetailRouter);
