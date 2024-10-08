@@ -5,7 +5,6 @@ import { chatRouter } from "./src/routes/chats";
 import { getAllGroupsRouter, groupRouter } from "./src/routes/groups";
 import { loginRoute, signupRoute } from "./src/routes/signup-login";
 import { userDetailRouter } from "./src/routes/user";
-import { userMap } from "./src/store";
 import { AuthChecker } from "./src/utils/authChecker";
 import webSocketServer from "./src/webSocket";
 import jsonwebtoken from "jsonwebtoken";
@@ -46,7 +45,7 @@ app.use("/signup", signupRoute);
 
 const authRouter = Router();
 authRouter.use(AuthChecker);
-app.use("/api", authRouter);
+app.use("/auth", authRouter);
 authRouter.use("/group", groupRouter);
 authRouter.use("/getGroups", getAllGroupsRouter);
 authRouter.use("/user", userDetailRouter);

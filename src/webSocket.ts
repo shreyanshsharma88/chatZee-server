@@ -1,7 +1,6 @@
-import WebSocket, { WebSocketServer } from "ws";
-import { groupMap, userMap } from "./store";
-import { TokenSocketMap } from "../app";
 import { PrismaClient } from "@prisma/client";
+import WebSocket, { WebSocketServer } from "ws";
+import { TokenSocketMap } from "../app";
 
 const webSocketServer = new WebSocketServer({ noServer: true });
 
