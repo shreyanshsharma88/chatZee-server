@@ -7,12 +7,6 @@ export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
     const { group_id } = req.params;
-
-    // const groupChats = await pool.query(
-    //   "select * from chats where sent_to = $1",
-    //   [group_id]
-    // );
-
     // TODO: ADD USERNAME
     const groupChats = await prisma.chats.findMany({
       where: {

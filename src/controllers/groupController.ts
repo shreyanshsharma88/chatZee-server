@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
 import { getUserById } from "../utils/user";
-import { allGroupsAndDMs, alreadyAddedInGroup, getGroupById } from "../utils/groups";
+import {
+  allGroupsAndDMs,
+  alreadyAddedInGroup,
+  getGroupById,
+} from "../utils/groups";
 
 const prisma = new PrismaClient();
 export const getAllGroups = async (req: Request, res: Response) => {
@@ -138,7 +142,7 @@ export const addUserToGroup = async (req: Request, res: Response) => {
 
 export const addGroup = async (req: Request, res: Response) => {
   try {
-    const { groupName, type, user_id } = req.body;
+    const { groupName, type, user_id, users } = req.body;
     if (!groupName || !type) {
       return res.status(401).send({
         message: "Groupname and type required",
@@ -152,12 +156,26 @@ export const addGroup = async (req: Request, res: Response) => {
       },
     });
 
-    await prisma.group_users.create({
-      data: {
-        group_id: group.id,
-        user_id: user_id,
-      },
-    })
+    await Promise.all([
+      prisma.group_users.create({
+        data: {
+          group_id: group.id,
+          user_id: user_id,
+        },
+      }),
+      users &&
+        users.length > 0 &&
+        Promise.all(
+          users.map(async (user: any) => {
+            await prisma.group_users.create({
+              data: {
+                group_id: group.id,
+                user_id: user,
+              },
+            });
+          })
+        ),
+    ]);
 
     return res.status(200).send({
       status: 200,
