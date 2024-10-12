@@ -2,7 +2,7 @@ import cors from "cors";
 import express, { Router } from "express";
 import { parse } from "url";
 import { chatRouter } from "./src/routes/chats";
-import { getAllGroupsRouter, groupRouter } from "./src/routes/groups";
+import { groupRouter } from "./src/routes/groups";
 import { loginRoute, signupRoute } from "./src/routes/signup-login";
 import { userDetailRouter } from "./src/routes/user";
 import { AuthChecker } from "./src/utils/authChecker";
@@ -47,7 +47,7 @@ const authRouter = Router();
 authRouter.use(AuthChecker);
 app.use("/api", authRouter);
 authRouter.use("/group", groupRouter);
-authRouter.use("/getGroups", getAllGroupsRouter);
+// authRouter.use("/getGroups", getAllGroupsRouter);
 authRouter.use("/user", userDetailRouter);
 authRouter.use("/chat", chatRouter);
 

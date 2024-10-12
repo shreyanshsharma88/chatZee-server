@@ -1,10 +1,12 @@
 import { Router } from "express";
 import { addGroup, addUserToGroup, getAllGroups, getGroup } from "../controllers/groupController";
 
-export const getAllGroupsRouter = Router();
+// export const getAllGroupsRouter = Router();
 export const groupRouter = Router()
 
-getAllGroupsRouter.get("/", getAllGroups );
+// getAllGroupsRouter.get("/", getAllGroups );
+
+groupRouter.get("/", getAllGroups );
 
 groupRouter.get("/:groupId",getGroup )
 

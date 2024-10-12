@@ -9,11 +9,13 @@ import {
 } from "../utils/groups";
 
 const prisma = new PrismaClient();
+
+// TODO: COULD BE OPTIMIZED FIX IT
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
     const { user_id } = req.body;
-    const { all, page, limit } = req.query;
-    let responseData;
+    const { all, page, limit , search} = req.query;
+    let responseData  = [];
     const [alreadyAddedGroups, groups] = await Promise.all([
       prisma.group_users.findMany({
         where: {
@@ -39,12 +41,12 @@ export const getAllGroups = async (req: Request, res: Response) => {
       responseData = paginatedData;
     }
     if (!all) {
-      responseData = userGroupData;
+      responseData = userGroupData.filter((group) => group.isAlreadyAdded);
     }
     return res.status(200).send({
       status: 200,
       groups: responseData,
-      total: userGroupData.length,
+      total: responseData?.length,
     });
   } catch (e) {
     console.log(e);

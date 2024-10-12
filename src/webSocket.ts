@@ -29,6 +29,8 @@ webSocketServer.on(
         //   groupId,
         // ]),
 
+        // TODO:  OPTIMIZE THIS SHIT
+
         prisma.chats.create({
           data: {
             message: data.message,

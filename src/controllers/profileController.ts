@@ -5,6 +5,7 @@ import { JWT_SECRET } from "../utils/constants";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
 import { checkUserExist, dmAlreadyExists } from "../utils/user";
+import jwt from "jsonwebtoken"
 
 const prisma = new PrismaClient();
 export const signup = async (req: Request, res: Response) => {
@@ -104,10 +105,19 @@ export const login = async (req: Request, res: Response) => {
 
 export const getUser = async (req: Request, res: Response) => {
   try {
-    const { all, page, limit } = req.query;
+    const { all, page, limit, search } = req.query;
     const { user, user_id } = req.body;
-    if (all === "true") {
-      const users = await prisma.users.findMany();
+    if (all === "true" && (page || limit)) {
+      const users = await prisma.users.findMany({
+        where: {
+          NOT: {
+            id: user_id,
+          },
+          username: {
+            contains: `${search}`,
+          },
+        },
+      });
 
       const paginatedData = paginateData({
         data: users,
@@ -155,3 +165,21 @@ export const getUser = async (req: Request, res: Response) => {
     });
   }
 };
+
+// const logout = async (req: Request, res: Response) => {
+//   try{
+
+//     const token = (req.headers as any)["token"]
+//     jwt.
+    
+
+//   }
+//   catch(e){
+//     console.log(e);
+//     return res.status(500).send({
+//       message: "Error",
+//       status: 500,
+//       e,
+//     });
+//   }
+// }
