@@ -7,17 +7,21 @@ export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
     const { group_id } = req.params;
-    // TODO: ADD USERNAME
     const groupChats = await prisma.chats.findMany({
       where: {
         sent_to: group_id,
       },
+      include:{
+        users: true
+      }
     })
     const paginatedData = paginateData({
       data: groupChats,
       limit: Number(limit),
       page: Number(page),
     });
+
+    
 
     // TODO: FORMAT THIS DATA IN A MORE READABLE WAY
     return res.status(200).send({
@@ -28,6 +32,7 @@ export const getChats = async (req: Request, res: Response) => {
         sentBy: item.sent_by,
         sentTo: item.sent_to,
         time: item.time_stamp,
+        sentByUsername: item.users.username
       })),
     });
   } catch (e) {

@@ -5,7 +5,7 @@ import { JWT_SECRET } from "../utils/constants";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
 import { checkUserExist, dmAlreadyExists } from "../utils/user";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 export const signup = async (req: Request, res: Response) => {
@@ -108,7 +108,10 @@ export const getUser = async (req: Request, res: Response) => {
     const { all, page, limit, search } = req.query;
     const { user, user_id } = req.body;
     if (all === "true" && (page || limit)) {
-      const users = await prisma.users.findMany({
+     
+      
+
+      const temp = await prisma.users.findMany({
         where: {
           NOT: {
             id: user_id,
@@ -117,35 +120,43 @@ export const getUser = async (req: Request, res: Response) => {
             contains: `${search}`,
           },
         },
+        include: {
+          group_users: {
+            include: {
+              groups: {
+                select: {
+                  type: true,
+                  id: true
+                },
+              },
+            },
+          },
+        },
+        // TODO: Fix pagination
+        // take: Number(limit),
+        // skip: Number(page) * Number(limit),
       });
-
       const paginatedData = paginateData({
-        data: users,
+        data: temp,
         limit: Number(limit),
         page: Number(page),
       });
-      const response = await Promise.all(
-        paginatedData.map(async (user: any) => {
-          if (user.id === user_id) return;
 
-          const isDm = await dmAlreadyExists({
-            id: user.id,
-            userId: user_id,
-          });
-          if (isDm === null) throw new Error();
+      const response = paginatedData.map((user) => {
+        const dmExist = user.group_users.find((item: any) => item.user_id === user.id && item.groups.type === "INDIVIDUAL");
+        return {
+          id: user.id,
+          userName: user.username,
+          alreadyAddedInDm: dmExist ? true : false,
+          dmId: dmExist ? dmExist.groups.id : null,
+        };
+      })
 
-          return {
-            id: user.id,
-            userName: user.username,
-            alreadyAddedInDm: isDm.exist,
-            dmId: isDm.groupId,
-          };
-        })
-      );
       return res.status(200).send({
         status: 200,
         users: response,
-        total: users.length,
+        total: temp.length,
+        temp
       });
     }
 
@@ -165,21 +176,3 @@ export const getUser = async (req: Request, res: Response) => {
     });
   }
 };
-
-// const logout = async (req: Request, res: Response) => {
-//   try{
-
-//     const token = (req.headers as any)["token"]
-//     jwt.
-    
-
-//   }
-//   catch(e){
-//     console.log(e);
-//     return res.status(500).send({
-//       message: "Error",
-//       status: 500,
-//       e,
-//     });
-//   }
-// }

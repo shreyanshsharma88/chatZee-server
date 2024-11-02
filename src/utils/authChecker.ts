@@ -37,7 +37,6 @@ export const AuthChecker = async (
         },
       });
 
-      console.log({ user });
       if (user === null) {
         return res.status(401).send({
           message: "User not found",

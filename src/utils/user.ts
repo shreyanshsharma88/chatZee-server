@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 
 export const checkUserExist = async (userName: string) => {
   try {
-    console.log({userName});
     const user = await prisma.users.findFirst({
       where: {
         username: userName,
