@@ -76,6 +76,8 @@ export const getGroup = async (req: Request, res: Response) => {
         group_id: groupId,
       },
     });
+
+    // todo: refactor
     const userDetails = await Promise.all(
       users.map(async (user: any) => {
         const { exist, user: userData } = await getUserById(user.user_id);
