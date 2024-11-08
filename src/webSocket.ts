@@ -48,7 +48,7 @@ webSocketServer.on(
         }
       }
 
-      prisma.chats.create({
+     await prisma.chats.create({
         data: {
           message: data.message,
           sent_by: userId,
