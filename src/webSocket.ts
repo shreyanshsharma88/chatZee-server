@@ -48,15 +48,13 @@ webSocketServer.on(
         }
       }
 
-      await Promise.all([
-        prisma.chats.create({
-          data: {
-            message: data.message,
-            sent_by: userId,
-            sent_to: groupId,
-          },
-        }),
-      ]);
+      prisma.chats.create({
+        data: {
+          message: data.message,
+          sent_by: userId,
+          sent_to: groupId,
+        },
+      });
     });
   }
 );

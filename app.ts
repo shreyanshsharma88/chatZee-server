@@ -60,7 +60,6 @@ server.on("upgrade", (request, socket, head: Buffer) => {
   const { query } = parse(request.url ?? "");
 
   const token = query!.slice(7);
-  console.log({ token });
 
   webSocketServer.handleUpgrade(request, socket, head as Buffer, (socket) => {
     jsonwebtoken.verify(token, JWT_SECRET, (err: any, jwtUser: any) => {

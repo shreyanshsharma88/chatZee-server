@@ -108,14 +108,11 @@ export const getUser = async (req: Request, res: Response) => {
     const { all, page, limit, search } = req.query;
     const { user, user_id } = req.body;
     if (all === "true" && (page || limit)) {
-     
-      
-
       const temp = await prisma.users.findMany({
         where: {
-          NOT: {
-            id: user_id,
-          },
+          // NOT: {
+          //   id: user_id,
+          // },
           username: {
             contains: `${search}`,
           },
@@ -126,7 +123,7 @@ export const getUser = async (req: Request, res: Response) => {
               groups: {
                 select: {
                   type: true,
-                  id: true
+                  id: true,
                 },
               },
             },
@@ -142,21 +139,30 @@ export const getUser = async (req: Request, res: Response) => {
         page: Number(page),
       });
 
-      const response = paginatedData.map((user) => {
-        const dmExist = user.group_users.find((item: any) => item.user_id === user.id && item.groups.type === "INDIVIDUAL");
-        return {
-          id: user.id,
-          userName: user.username,
+      const userGroup = temp
+        ?.find((item) => item?.id === user_id)
+        ?.group_users.filter((item: any) => item.groups.type === "INDIVIDUAL")
+        .map((item) => item.groups.id);
+
+      const response = paginatedData.reduce((acc: any, curr: any) => {
+        if (curr.id === user_id) return acc;
+        const dmExist = curr.group_users.find((item: any) =>
+          userGroup?.includes(item?.groups?.id)
+        );
+        acc.push({
+          id: curr.id,
+          userName: curr.username,
           alreadyAddedInDm: dmExist ? true : false,
-          dmId: dmExist ? dmExist.groups.id : null,
-        };
-      })
+          dmId: dmExist ? dmExist.group_id : null,
+        });
+        return acc;
+      }, []);
 
       return res.status(200).send({
         status: 200,
         users: response,
         total: temp.length,
-        temp
+        temp,
       });
     }
 

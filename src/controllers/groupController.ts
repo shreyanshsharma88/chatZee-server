@@ -10,27 +10,32 @@ import {
 
 const prisma = new PrismaClient();
 
-// TODO: COULD BE OPTIMIZED FIX IT
 export const getAllGroups = async (req: Request, res: Response) => {
   try {
     const { user_id } = req.body;
-    const { all, page, limit , search} = req.query;
-    let responseData  = [];
-    const [alreadyAddedGroups, groups] = await Promise.all([
-      prisma.group_users.findMany({
-        where: {
-          user_id: user_id,
-        },
-      }),
-      allGroupsAndDMs("GROUP"),
-    ]);
+    const { all, page, limit, search } = req.query;
+    let responseData = [];
 
-    const userGroupData = groups.reduce((acc: any, group: any) => {
-      const isAlreadyAdded = alreadyAddedGroups.find(
-        (g: any) => g.group_id === group.id
-      );
+    const myGroups = await prisma.groups.findMany({
+      where: {
+        groupname: {
+          contains: search?.toString(),
+        },
+        type: 'GROUP'
+      },
+      include: {
+        group_users: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
+    });
+    const userGroupData = myGroups.reduce((acc: any[], group) => {
+
+      const isAlreadyAdded = group.group_users.find((item) => item.user_id === user_id);
       return [...acc, { ...group, isAlreadyAdded: !!isAlreadyAdded }];
-    }, []);
+    },[])
 
     if (all === "true") {
       const paginatedData = paginateData({
@@ -61,40 +66,33 @@ export const getAllGroups = async (req: Request, res: Response) => {
 export const getGroup = async (req: Request, res: Response) => {
   try {
     const { groupId } = req.params;
-    const group = await getGroupById(groupId);
-    if (group.exist === null) {
-      throw new Error("Error");
-    }
-    if (group.exist === false) {
-      return res.status(401).send({
-        status: 401,
-        message: "Group not found",
-      });
-    }
-    const users = await prisma.group_users.findMany({
-      where: {
-        group_id: groupId,
+    const group = await prisma.groups.findUnique({
+      where:{
+        id: groupId
       },
-    });
-
-    // todo: refactor
-    const userDetails = await Promise.all(
-      users.map(async (user: any) => {
-        const { exist, user: userData } = await getUserById(user.user_id);
-        if (exist === false || !userData) return;
-        return {
-          id: userData.id,
-          userName: userData.username,
-        };
-      })
-    );
+      include:{
+        group_users:{
+          include:{
+            users:{
+              select:{
+                id: true,
+                username: true
+              }
+            }
+          }
+        }
+      }
+    })
     return res.status(200).send({
       status: 200,
       group: {
-        id: group.group?.id,
-        groupName: group.group?.groupname,
-        type: group.group?.type,
-        users: userDetails,
+        id: group?.id,
+        groupName: group?.groupname,
+        type: group?.type,
+        users: group?.group_users.map((user) => ({
+          id: user.users.id,
+          username: user.users.username,
+        })),
       },
     });
   } catch (e) {
