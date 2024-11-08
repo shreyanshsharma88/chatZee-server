@@ -21,7 +21,7 @@ export const getAllGroups = async (req: Request, res: Response) => {
         groupname: {
           contains: search?.toString(),
         },
-        type: 'GROUP'
+        type: "GROUP",
       },
       include: {
         group_users: {
@@ -32,10 +32,11 @@ export const getAllGroups = async (req: Request, res: Response) => {
       },
     });
     const userGroupData = myGroups.reduce((acc: any[], group) => {
-
-      const isAlreadyAdded = group.group_users.find((item) => item.user_id === user_id);
+      const isAlreadyAdded = group.group_users.find(
+        (item) => item.user_id === user_id
+      );
       return [...acc, { ...group, isAlreadyAdded: !!isAlreadyAdded }];
-    },[])
+    }, []);
 
     if (all === "true") {
       const paginatedData = paginateData({
@@ -67,22 +68,22 @@ export const getGroup = async (req: Request, res: Response) => {
   try {
     const { groupId } = req.params;
     const group = await prisma.groups.findUnique({
-      where:{
-        id: groupId
+      where: {
+        id: groupId,
       },
-      include:{
-        group_users:{
-          include:{
-            users:{
-              select:{
+      include: {
+        group_users: {
+          include: {
+            users: {
+              select: {
                 id: true,
-                username: true
-              }
-            }
-          }
-        }
-      }
-    })
+                username: true,
+              },
+            },
+          },
+        },
+      },
+    });
     return res.status(200).send({
       status: 200,
       group: {
@@ -151,6 +152,39 @@ export const addGroup = async (req: Request, res: Response) => {
         status: 401,
       });
     }
+    if (type === "INDIVIDUAL") {
+      const groups = await prisma.group_users.findMany({
+        where: {
+          OR: [
+            {
+              user_id: users[1],
+            },
+            {
+              user_id: users[0],
+            },
+          ],
+        },
+        include: {
+          groups: {
+            select: {
+              id: true,
+              type: true,
+            },
+          },
+        },
+      });
+      const existing = groups.find((group) => 
+        group.groups.type === "INDIVIDUAL"
+      );
+      if (existing) {
+        return res.status(400).send({
+          message: "Individual group already exist",
+          status: 400,
+          id: existing.groups.id,
+        });
+      }
+
+    }
     const group = await prisma.groups.create({
       data: {
         groupname: groupName,
@@ -182,6 +216,7 @@ export const addGroup = async (req: Request, res: Response) => {
     return res.status(200).send({
       status: 200,
       message: "Group added",
+      id: group.id,
     });
   } catch (e) {
     console.log(e);
