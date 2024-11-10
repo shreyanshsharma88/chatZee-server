@@ -2,7 +2,7 @@ import { Response, Request } from "express";
 import { paginateData } from "../utils/paginator";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 export const getChats = async (req: Request, res: Response) => {
   try {
     const { page, limit } = req.query;
@@ -11,19 +11,16 @@ export const getChats = async (req: Request, res: Response) => {
       where: {
         sent_to: group_id,
       },
-      include:{
-        users: true
-      }
-    })
+      include: {
+        users: true,
+      },
+    });
     const paginatedData = paginateData({
       data: groupChats,
       limit: Number(limit),
       page: Number(page),
     });
 
-    
-
-    // TODO: FORMAT THIS DATA IN A MORE READABLE WAY
     return res.status(200).send({
       status: 200,
       chats: paginatedData.map((item) => ({
@@ -32,7 +29,7 @@ export const getChats = async (req: Request, res: Response) => {
         sentBy: item.sent_by,
         sentTo: item.sent_to,
         time: item.time_stamp,
-        sentByUsername: item.users.username
+        sentByUsername: item.users.username,
       })),
     });
   } catch (e) {
